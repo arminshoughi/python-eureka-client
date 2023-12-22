@@ -25,8 +25,8 @@ from py_eureka_client import HA_STRATEGY_RANDOM, HA_STRATEGY_STICK, HA_STRATEGY_
 from py_eureka_client import ERROR_REGISTER, ERROR_DISCOVER, ERROR_STATUS_UPDATE
 from py_eureka_client import (
     DEFAULT_EUREKA_SERVER_URL,
-    DEFAULT_INSTNACE_PORT,
-    DEFAULT_INSTNACE_SECURE_PORT,
+    DEFAULT_INSTANCE_PORT,
+    DEFAULT_INSTANCE_SECURE_PORT,
     RENEWAL_INTERVAL_IN_SECS,
     DURATION_IN_SECS,
     DEFAULT_DATA_CENTER_INFO,
@@ -382,9 +382,9 @@ class EurekaClient:
         instance_host: str = "",
         instance_ip: str = "",
         instance_ip_network: str = "",
-        instance_port: int = DEFAULT_INSTNACE_PORT,
+        instance_port: int = DEFAULT_INSTANCE_PORT,
         instance_unsecure_port_enabled: bool = True,
-        instance_secure_port: int = DEFAULT_INSTNACE_SECURE_PORT,
+        instance_secure_port: int = DEFAULT_INSTANCE_SECURE_PORT,
         instance_secure_port_enabled: bool = False,
         data_center_name: str = DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
         renewal_interval_in_secs: int = RENEWAL_INTERVAL_IN_SECS,
@@ -1214,9 +1214,9 @@ async def init_async(
     instance_host: str = "",
     instance_ip: str = "",
     instance_ip_network: str = "",
-    instance_port: int = DEFAULT_INSTNACE_PORT,
+    instance_port: int = DEFAULT_INSTANCE_PORT,
     instance_unsecure_port_enabled: bool = True,
-    instance_secure_port: int = DEFAULT_INSTNACE_SECURE_PORT,
+    instance_secure_port: int = DEFAULT_INSTANCE_SECURE_PORT,
     instance_secure_port_enabled: bool = False,
     data_center_name: str = DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
     renewal_interval_in_secs: int = RENEWAL_INTERVAL_IN_SECS,
@@ -1391,9 +1391,9 @@ def init(
     instance_host: str = "",
     instance_ip: str = "",
     instance_ip_network: str = "",
-    instance_port: int = DEFAULT_INSTNACE_PORT,
+    instance_port: int = DEFAULT_INSTANCE_PORT,
     instance_unsecure_port_enabled: bool = True,
-    instance_secure_port: int = DEFAULT_INSTNACE_SECURE_PORT,
+    instance_secure_port: int = DEFAULT_INSTANCE_SECURE_PORT,
     instance_secure_port_enabled: bool = False,
     data_center_name: str = DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
     renewal_interval_in_secs: int = RENEWAL_INTERVAL_IN_SECS,

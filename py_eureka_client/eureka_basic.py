@@ -11,8 +11,8 @@ import py_eureka_client.http_client as http_client
 from py_eureka_client import INSTANCE_STATUS_UP, INSTANCE_STATUS_OUT_OF_SERVICE
 from py_eureka_client import ACTION_TYPE_ADDED
 from py_eureka_client import (
-    DEFAULT_INSTNACE_PORT,
-    DEFAULT_INSTNACE_SECURE_PORT,
+    DEFAULT_INSTANCE_PORT,
+    DEFAULT_INSTANCE_SECURE_PORT,
     RENEWAL_INTERVAL_IN_SECS,
     DURATION_IN_SECS,
     DEFAULT_DATA_CENTER_INFO,
@@ -69,8 +69,8 @@ class Instance:
             app="",
             appGroupName="",
             ipAddr="",
-            port=PortWrapper(port=DEFAULT_INSTNACE_PORT, enabled=True),
-            securePort=PortWrapper(port=DEFAULT_INSTNACE_SECURE_PORT, enabled=False),
+            port=PortWrapper(port=DEFAULT_INSTANCE_PORT, enabled=True),
+            securePort=PortWrapper(port=DEFAULT_INSTANCE_SECURE_PORT, enabled=False),
             homePageUrl="",
             statusPageUrl="",
             healthCheckUrl="",
