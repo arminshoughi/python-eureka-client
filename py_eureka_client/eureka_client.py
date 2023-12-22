@@ -1,33 +1,9 @@
-# -*- coding: utf-8 -*-
-
-"""
-Copyright (c) 2018 Keijack Wu
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-"""
-
 import re, time, json, random, socket, asyncio, threading
 
 from copy import copy
-from typing import Callable, Dict, List, Union
-from threading import RLock, Timer
 from urllib.parse import quote
+from threading import RLock, Timer
+from typing import Callable, Dict, List, Union
 
 import py_eureka_client.http_client as http_client
 import py_eureka_client.netint_utils as netint
@@ -48,16 +24,16 @@ from py_eureka_client import (
 from py_eureka_client import HA_STRATEGY_RANDOM, HA_STRATEGY_STICK, HA_STRATEGY_OTHER
 from py_eureka_client import ERROR_REGISTER, ERROR_DISCOVER, ERROR_STATUS_UPDATE
 from py_eureka_client import (
-    _DEFAULT_EUREKA_SERVER_URL,
-    _DEFAULT_INSTNACE_PORT,
-    _DEFAULT_INSTNACE_SECURE_PORT,
-    _RENEWAL_INTERVAL_IN_SECS,
-    _DURATION_IN_SECS,
-    _DEFAULT_DATA_CENTER_INFO,
-    _DEFAULT_DATA_CENTER_INFO_CLASS,
-    _AMAZON_DATA_CENTER_INFO_CLASS,
+    DEFAULT_EUREKA_SERVER_URL,
+    DEFAULT_INSTNACE_PORT,
+    DEFAULT_INSTNACE_SECURE_PORT,
+    RENEWAL_INTERVAL_IN_SECS,
+    DURATION_IN_SECS,
+    DEFAULT_DATA_CENTER_INFO,
+    DEFAULT_DATA_CENTER_INFO_CLASS,
+    AMAZON_DATA_CENTER_INFO_CLASS,
 )
-from py_eureka_client import _DEFAUTL_ZONE, _DEFAULT_TIME_OUT
+from py_eureka_client import DEFAULT_ZONE, _DEFAULT_TIME_OUT
 
 from py_eureka_client.eureka_basic import (
     Instance,
@@ -84,7 +60,7 @@ def _current_time_millis():
 class EurekaServerConf(object):
     def __init__(
         self,
-        eureka_server=_DEFAULT_EUREKA_SERVER_URL,
+        eureka_server=DEFAULT_EUREKA_SERVER_URL,
         eureka_domain="",
         eureka_protocol="http",
         eureka_basic_auth_user="",
@@ -98,7 +74,7 @@ class EurekaServerConf(object):
         self.region: str = region
         self.__zone = zone
         self.__eureka_availability_zones: dict = eureka_availability_zones
-        _zone = zone if zone else _DEFAUTL_ZONE
+        _zone = zone if zone else DEFAULT_ZONE
         if eureka_domain:
             zone_urls = get_txt_dns_record(f"txt.{region}.{eureka_domain}")
             for zone_url in zone_urls:
@@ -152,7 +128,7 @@ class EurekaServerConf(object):
         elif self.__eureka_availability_zones:
             return list(self.__eureka_availability_zones.keys())[0]
         else:
-            return _DEFAUTL_ZONE
+            return DEFAULT_ZONE
 
     def _format_url(
         self,
@@ -388,7 +364,7 @@ class EurekaClient:
 
     def __init__(
         self,
-        eureka_server: str = _DEFAULT_EUREKA_SERVER_URL,
+        eureka_server: str = DEFAULT_EUREKA_SERVER_URL,
         eureka_domain: str = "",
         region: str = "",
         zone: str = "",
@@ -406,13 +382,13 @@ class EurekaClient:
         instance_host: str = "",
         instance_ip: str = "",
         instance_ip_network: str = "",
-        instance_port: int = _DEFAULT_INSTNACE_PORT,
+        instance_port: int = DEFAULT_INSTNACE_PORT,
         instance_unsecure_port_enabled: bool = True,
-        instance_secure_port: int = _DEFAULT_INSTNACE_SECURE_PORT,
+        instance_secure_port: int = DEFAULT_INSTNACE_SECURE_PORT,
         instance_secure_port_enabled: bool = False,
-        data_center_name: str = _DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
-        renewal_interval_in_secs: int = _RENEWAL_INTERVAL_IN_SECS,
-        duration_in_secs: int = _DURATION_IN_SECS,
+        data_center_name: str = DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
+        renewal_interval_in_secs: int = RENEWAL_INTERVAL_IN_SECS,
+        duration_in_secs: int = DURATION_IN_SECS,
         home_page_url: str = "",
         status_page_url: str = "",
         health_check_url: str = "",
@@ -538,9 +514,9 @@ class EurekaClient:
             },
             "countryId": 1,
             "dataCenterInfo": {
-                "@class": _AMAZON_DATA_CENTER_INFO_CLASS
+                "@class": AMAZON_DATA_CENTER_INFO_CLASS
                 if self.__data_center_name == "Amazon"
-                else _DEFAULT_DATA_CENTER_INFO_CLASS,
+                else DEFAULT_DATA_CENTER_INFO_CLASS,
                 "name": self.__data_center_name,
             },
             "leaseInfo": {
@@ -719,11 +695,11 @@ class EurekaClient:
             await self.__try_eureka_server_regardless_zones(fun)
 
     async def __try_eureka_servers_in_list(
-        self, fun, eureka_servers=[], zone=_DEFAUTL_ZONE
+        self, fun, eureka_servers=[], zone=DEFAULT_ZONE
     ):
         with self.__net_lock:
             ok = False
-            _zone = zone if zone else _DEFAUTL_ZONE
+            _zone = zone if zone else DEFAULT_ZONE
             for url in eureka_servers:
                 url = url.strip()
                 try:
@@ -1145,12 +1121,12 @@ class EurekaClient:
         elif self.__ha_strategy == HA_STRATEGY_STICK:
             if application_name in self.__ha_cache:
                 cache_id = self.__ha_cache[application_name]
-                cahce_instance = app.get_instance(cache_id)
+                cache_instance = app.get_instance(cache_id)
                 if (
-                    cahce_instance is not None
-                    and cahce_instance.status == INSTANCE_STATUS_UP
+                    cache_instance is not None
+                    and cache_instance.status == INSTANCE_STATUS_UP
                 ):
-                    return cahce_instance
+                    return cache_instance
                 else:
                     return random_one(up_instances)
             else:
@@ -1220,7 +1196,7 @@ __cache_clients_lock = RLock()
 
 
 async def init_async(
-    eureka_server: str = _DEFAULT_EUREKA_SERVER_URL,
+    eureka_server: str = DEFAULT_EUREKA_SERVER_URL,
     eureka_domain: str = "",
     region: str = "",
     zone: str = "",
@@ -1238,13 +1214,13 @@ async def init_async(
     instance_host: str = "",
     instance_ip: str = "",
     instance_ip_network: str = "",
-    instance_port: int = _DEFAULT_INSTNACE_PORT,
+    instance_port: int = DEFAULT_INSTNACE_PORT,
     instance_unsecure_port_enabled: bool = True,
-    instance_secure_port: int = _DEFAULT_INSTNACE_SECURE_PORT,
+    instance_secure_port: int = DEFAULT_INSTNACE_SECURE_PORT,
     instance_secure_port_enabled: bool = False,
-    data_center_name: str = _DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
-    renewal_interval_in_secs: int = _RENEWAL_INTERVAL_IN_SECS,
-    duration_in_secs: int = _DURATION_IN_SECS,
+    data_center_name: str = DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
+    renewal_interval_in_secs: int = RENEWAL_INTERVAL_IN_SECS,
+    duration_in_secs: int = DURATION_IN_SECS,
     home_page_url: str = "",
     status_page_url: str = "",
     health_check_url: str = "",
@@ -1397,7 +1373,7 @@ def get_event_loop() -> asyncio.AbstractEventLoop:
 
 
 def init(
-    eureka_server: str = _DEFAULT_EUREKA_SERVER_URL,
+    eureka_server: str = DEFAULT_EUREKA_SERVER_URL,
     eureka_domain: str = "",
     region: str = "",
     zone: str = "",
@@ -1415,13 +1391,13 @@ def init(
     instance_host: str = "",
     instance_ip: str = "",
     instance_ip_network: str = "",
-    instance_port: int = _DEFAULT_INSTNACE_PORT,
+    instance_port: int = DEFAULT_INSTNACE_PORT,
     instance_unsecure_port_enabled: bool = True,
-    instance_secure_port: int = _DEFAULT_INSTNACE_SECURE_PORT,
+    instance_secure_port: int = DEFAULT_INSTNACE_SECURE_PORT,
     instance_secure_port_enabled: bool = False,
-    data_center_name: str = _DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
-    renewal_interval_in_secs: int = _RENEWAL_INTERVAL_IN_SECS,
-    duration_in_secs: int = _DURATION_IN_SECS,
+    data_center_name: str = DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
+    renewal_interval_in_secs: int = RENEWAL_INTERVAL_IN_SECS,
+    duration_in_secs: int = DURATION_IN_SECS,
     home_page_url: str = "",
     status_page_url: str = "",
     health_check_url: str = "",
