@@ -1,34 +1,7 @@
-# -*- coding: utf-8 -*-
-
-"""
-Copyright (c) 2018 Keijack Wu
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-"""
-
-from abc import abstractmethod
-import sys
-import time
-import logging
-import asyncio
-from threading import Thread
+import sys, time, logging, asyncio
 from typing import Dict, List, Tuple
+from abc import abstractmethod
+from threading import Thread
 
 
 class LazyCalledLogger(logging.Logger):
@@ -102,10 +75,10 @@ class LoggerFactory:
     _LOG_LVELS: Tuple[str] = ("DEBUG", "INFO", "WARN", "ERROR")
 
     def __init__(
-        self,
-        log_level: str = "INFO",
-        log_format: str = DEFAULT_LOG_FORMAT,
-        date_format: str = DEFAULT_DATE_FORMAT,
+            self,
+            log_level: str = "INFO",
+            log_format: str = DEFAULT_LOG_FORMAT,
+            date_format: str = DEFAULT_DATE_FORMAT,
     ) -> None:
         self.__cache_loggers: Dict[str, CachingLogger] = {}
         self._log_level = (
@@ -169,11 +142,11 @@ class LoggerFactory:
                 l.removeHandler(hdlr)
             l.addHandler(handler)
 
-    def get_logger(self, tag: str = "pythone-simple-http-server") -> logging.Logger:
+    def get_logger(self, tag: str = "python-simple-http-server") -> logging.Logger:
         if tag not in self.__cache_loggers:
             self.__cache_loggers[tag] = CachingLogger(tag, self._log_level)
-            for hdlr in self.handlers:
-                self.__cache_loggers[tag].addHandler(hdlr)
+            for handler in self.handlers:
+                self.__cache_loggers[tag].addHandler(handler)
         return self.__cache_loggers[tag]
 
 
