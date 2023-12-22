@@ -109,3 +109,4 @@ upload.sh
 
 # vscode
 .vscode/
+.idea/
