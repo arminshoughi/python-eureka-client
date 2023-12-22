@@ -32,7 +32,6 @@ from typing import Dict, List, Tuple
 
 
 class LazyCalledLogger(logging.Logger):
-
     def do_call_handlers(self, record):
         super().callHandlers(record)
 
@@ -42,7 +41,6 @@ class LazyCalledLogger(logging.Logger):
 
 
 class LazyCalledLoggerThread:
-
     daemon_threads = True
 
     def __init__(self) -> None:
@@ -63,7 +61,9 @@ class LazyCalledLoggerThread:
                 # wait for the loop ready
                 time.sleep(0.1)
             return
-        self.coroutine_thread = Thread(target=self.coroutine_main, name="logger-thread", daemon=self.daemon_threads)
+        self.coroutine_thread = Thread(
+            target=self.coroutine_main, name="logger-thread", daemon=self.daemon_threads
+        )
         self.coroutine_thread.start()
 
         while not self.coroutine_loop:
@@ -82,11 +82,12 @@ class LazyCalledLoggerThread:
 
     def call_logger_handler(self, logger: LazyCalledLogger, record):
         self.start()
-        asyncio.run_coroutine_threadsafe(self._call(logger, record), self.coroutine_loop)
+        asyncio.run_coroutine_threadsafe(
+            self._call(logger, record), self.coroutine_loop
+        )
 
 
 class CachingLogger(LazyCalledLogger):
-
     logger_thread: LazyCalledLoggerThread = LazyCalledLoggerThread()
 
     def callHandlers(self, record):
@@ -94,16 +95,24 @@ class CachingLogger(LazyCalledLogger):
 
 
 class LoggerFactory:
+    DEFAULT_LOG_FORMAT: str = "[%(asctime)s]-[%(threadName)s]-[%(name)s:%(lineno)d] %(levelname)-4s: %(message)s"
 
-    DEFAULT_LOG_FORMAT: str = '[%(asctime)s]-[%(threadName)s]-[%(name)s:%(lineno)d] %(levelname)-4s: %(message)s'
-
-    DEFAULT_DATE_FORMAT: str = '%Y-%m-%d %H:%M:%S'
+    DEFAULT_DATE_FORMAT: str = "%Y-%m-%d %H:%M:%S"
 
     _LOG_LVELS: Tuple[str] = ("DEBUG", "INFO", "WARN", "ERROR")
 
-    def __init__(self, log_level: str = "INFO", log_format: str = DEFAULT_LOG_FORMAT, date_format: str = DEFAULT_DATE_FORMAT) -> None:
+    def __init__(
+        self,
+        log_level: str = "INFO",
+        log_format: str = DEFAULT_LOG_FORMAT,
+        date_format: str = DEFAULT_DATE_FORMAT,
+    ) -> None:
         self.__cache_loggers: Dict[str, CachingLogger] = {}
-        self._log_level = log_level.upper() if log_level and log_level.upper() in self._LOG_LVELS else "INFO"
+        self._log_level = (
+            log_level.upper()
+            if log_level and log_level.upper() in self._LOG_LVELS
+            else "INFO"
+        )
         self.log_format = log_format
         self.date_format = date_format
 
@@ -126,7 +135,11 @@ class LoggerFactory:
 
     @log_level.setter
     def log_level(self, log_level: str):
-        self._log_level = log_level.upper() if log_level and log_level.upper() in self._LOG_LVELS else "INFO"
+        self._log_level = (
+            log_level.upper()
+            if log_level and log_level.upper() in self._LOG_LVELS
+            else "INFO"
+        )
         _logger_ = self.get_logger("Logger")
         _logger_.info(f"global logger set to {self._log_level}")
         for h in self._handlers:
@@ -193,5 +206,5 @@ def set_handler(handler: logging.Handler) -> None:
     _default_logger_factory.set_handler(handler)
 
 
-def get_logger(tag: str = "pythone-simple-http-server") -> logging.Logger:
+def get_logger(tag: str = "python-simple-http-server") -> logging.Logger:
     return _default_logger_factory.get_logger(tag)

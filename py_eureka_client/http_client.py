@@ -46,17 +46,19 @@ Default encoding
 _DEFAULT_ENCODING = "utf-8"
 
 _URL_REGEX = re.compile(
-    r'^((?:http)s?)://'  # http:// or https://
+    r"^((?:http)s?)://"  # http:// or https://
     # basic authentication -> username:password@
-    r'(([A-Z0-9-_~!.%]+):([A-Z0-9-_~!.%]+)@)?'
+    r"(([A-Z0-9-_~!.%]+):([A-Z0-9-_~!.%]+)@)?"
     # domain...
-    r'((?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'
-    r'(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)|'  # domain name without `.`
+    r"((?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"
+    r"(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)|"  # domain name without `.`
     r"(?:\[((?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4})\])|"  # ipv6
-    r'localhost|'  # localhost...
-    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-    r'(?::(\d+))?'  # optional port
-    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    r"localhost|"  # localhost...
+    r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
+    r"(?::(\d+))?"  # optional port
+    r"(?:/?|[/?]\S+)$",
+    re.IGNORECASE,
+)
 
 
 def parse_url(url):
@@ -75,14 +77,13 @@ def parse_url(url):
             "schema": m.group(1),
             "host": m.group(5),
             "ipv6": m.group(6),
-            "port": int(m.group(7)) if m.group(7) is not None else None
+            "port": int(m.group(7)) if m.group(7) is not None else None,
         }
     else:
         raise URLError(f"url[{url}] is not a valid url.")
 
 
 class HttpRequest:
-
     def __init__(self, url, headers={}, method=None):
         url_match = _URL_REGEX.match(url)
         if url_match is None:
@@ -96,21 +97,22 @@ class HttpRequest:
         self.method = method
 
         if url_auth is not None:
-            self.headers['Authorization'] = f'Basic {url_auth}'
+            self.headers["Authorization"] = f"Basic {url_auth}"
 
     def add_header(self, key: str, value: str):
         self.headers[key] = value
 
     def _to_urllib_request(self):
-        return urllib.request.Request(self.url, headers=self.headers, method=self.method)
+        return urllib.request.Request(
+            self.url, headers=self.headers, method=self.method
+        )
 
 
 class HttpResponse:
-
     def __init__(self, raw_response=None) -> None:
         self.raw_response = raw_response
         self.__body_read = False
-        self.__body_text = ''
+        self.__body_text = ""
 
     def _read_body(self):
         res = self.raw_response
@@ -136,13 +138,16 @@ class HttpResponse:
 
 
 class HttpClient:
-
-    async def urlopen(self, request: Union[str, HttpRequest] = None,
-                      data: bytes = None, timeout: float = None) -> HttpResponse:
+    async def urlopen(
+        self,
+        request: Union[str, HttpRequest] = None,
+        data: bytes = None,
+        timeout: float = None,
+    ) -> HttpResponse:
         if isinstance(request, HttpRequest):
             req = request
         elif isinstance(request, str):
-            req = HttpRequest(request, headers={'Accept-Encoding': 'gzip'})
+            req = HttpRequest(request, headers={"Accept-Encoding": "gzip"})
         else:
             raise URLError("Invalid URL")
 

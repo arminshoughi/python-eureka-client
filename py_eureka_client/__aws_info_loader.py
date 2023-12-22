@@ -35,7 +35,6 @@ _AWS_METADATA_SERVICE_URL = f"http://{_AWS_METADATA_SERVICE_IP}/latest/"
 
 
 class AmazonInfo:
-
     def __init__(self):
         self.__can_access = self.__check_connectivity()
 
@@ -49,19 +48,24 @@ class AmazonInfo:
             except socket.error:
                 idx = i + 1
                 _logger.debug(
-                    f"Try amazon metadata services connectivity fail, retry ({idx}/{_CONNECTIVITY_TEST_TIMES})")
+                    f"Try amazon metadata services connectivity fail, retry ({idx}/{_CONNECTIVITY_TEST_TIMES})"
+                )
                 time.sleep(1)
         _logger.warn(
-            f"Cannot connect to amazon metadata services in address [{_AWS_METADATA_SERVICE_IP}]")
+            f"Cannot connect to amazon metadata services in address [{_AWS_METADATA_SERVICE_IP}]"
+        )
         return False
 
     async def get_ec2_metadata(self, meta_path, default_value="", ignore_error=False):
         if not self.__can_access:
             _logger.warn(
-                f"Cannot connect to amazon metadata services in address [{_AWS_METADATA_SERVICE_IP}], return default value. ")
+                f"Cannot connect to amazon metadata services in address [{_AWS_METADATA_SERVICE_IP}], return default value. "
+            )
             return default_value
         try:
-            res = await http_client.urlopen(f"{_AWS_METADATA_SERVICE_URL}meta-data/{meta_path}")
+            res = await http_client.urlopen(
+                f"{_AWS_METADATA_SERVICE_URL}meta-data/{meta_path}"
+            )
             return res.body_text
         except Exception:
             log_excep = _logger.debug if ignore_error else _logger.exception
@@ -71,12 +75,16 @@ class AmazonInfo:
     async def get_instance_identity_document(self, default_value={}):
         if not self.__can_access:
             _logger.warn(
-                f"Cannot connect to amazon metadata services in address [{_AWS_METADATA_SERVICE_IP}], return default value. ")
+                f"Cannot connect to amazon metadata services in address [{_AWS_METADATA_SERVICE_IP}], return default value. "
+            )
             return default_value
         try:
-            doc = await http_client.urlopen(f"{_AWS_METADATA_SERVICE_URL}dynamic/instance-identity/document")
+            doc = await http_client.urlopen(
+                f"{_AWS_METADATA_SERVICE_URL}dynamic/instance-identity/document"
+            )
             return json.loads(doc.body_text)
         except Exception:
             _logger.exception(
-                "error when loading dynamic instance identity document from aws")
+                "error when loading dynamic instance identity document from aws"
+            )
             return default_value

@@ -36,9 +36,17 @@ import py_eureka_client.http_client as http_client
 from py_eureka_client.logger import get_logger
 
 
-from py_eureka_client import INSTANCE_STATUS_UP,   INSTANCE_STATUS_OUT_OF_SERVICE
+from py_eureka_client import INSTANCE_STATUS_UP, INSTANCE_STATUS_OUT_OF_SERVICE
 from py_eureka_client import ACTION_TYPE_ADDED
-from py_eureka_client import _DEFAULT_INSTNACE_PORT, _DEFAULT_INSTNACE_SECURE_PORT, _RENEWAL_INTERVAL_IN_SECS, _RENEWAL_INTERVAL_IN_SECS, _DURATION_IN_SECS, _DEFAULT_DATA_CENTER_INFO, _DEFAULT_DATA_CENTER_INFO_CLASS
+from py_eureka_client import (
+    _DEFAULT_INSTNACE_PORT,
+    _DEFAULT_INSTNACE_SECURE_PORT,
+    _RENEWAL_INTERVAL_IN_SECS,
+    _RENEWAL_INTERVAL_IN_SECS,
+    _DURATION_IN_SECS,
+    _DEFAULT_DATA_CENTER_INFO,
+    _DEFAULT_DATA_CENTER_INFO_CLASS,
+)
 from py_eureka_client import _DEFAULT_ENCODING, _DEFAUTL_ZONE, _DEFAULT_TIME_OUT
 
 _logger = get_logger("eureka_basic")
@@ -49,15 +57,16 @@ _logger = get_logger("eureka_basic")
 
 
 class LeaseInfo:
-
-    def __init__(self,
-                 renewalIntervalInSecs: int = _RENEWAL_INTERVAL_IN_SECS,
-                 durationInSecs: int = _DURATION_IN_SECS,
-                 registrationTimestamp: int = 0,
-                 lastRenewalTimestamp: int = 0,
-                 renewalTimestamp: int = 0,
-                 evictionTimestamp: int = 0,
-                 serviceUpTimestamp: int = 0):
+    def __init__(
+        self,
+        renewalIntervalInSecs: int = _RENEWAL_INTERVAL_IN_SECS,
+        durationInSecs: int = _DURATION_IN_SECS,
+        registrationTimestamp: int = 0,
+        lastRenewalTimestamp: int = 0,
+        renewalTimestamp: int = 0,
+        evictionTimestamp: int = 0,
+        serviceUpTimestamp: int = 0,
+    ):
         self.renewalIntervalInSecs: int = renewalIntervalInSecs
         self.durationInSecs: int = durationInSecs
         self.registrationTimestamp: int = registrationTimestamp
@@ -68,11 +77,12 @@ class LeaseInfo:
 
 
 class DataCenterInfo:
-
-    def __init__(self,
-                 name=_DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
-                 className=_DEFAULT_DATA_CENTER_INFO_CLASS,
-                 metadata={}):
+    def __init__(
+        self,
+        name=_DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
+        className=_DEFAULT_DATA_CENTER_INFO_CLASS,
+        metadata={},
+    ):
         self.name: str = name
         self.className: str = className
         self.metadata: Dict = metadata if metadata else {}
@@ -85,34 +95,34 @@ class PortWrapper:
 
 
 class Instance:
-
-    def __init__(self,
-                 instanceId="",
-                 sid="",  # @deprecated
-                 app="",
-                 appGroupName="",
-                 ipAddr="",
-                 port=PortWrapper(port=_DEFAULT_INSTNACE_PORT, enabled=True),
-                 securePort=PortWrapper(
-                     port=_DEFAULT_INSTNACE_SECURE_PORT, enabled=False),
-                 homePageUrl="",
-                 statusPageUrl="",
-                 healthCheckUrl="",
-                 secureHealthCheckUrl="",
-                 vipAddress="",
-                 secureVipAddress="",
-                 countryId=1,
-                 dataCenterInfo=DataCenterInfo(),
-                 hostName="",
-                 status="",  # UP, DOWN, STARTING, OUT_OF_SERVICE, UNKNOWN
-                 overriddenstatus="",  # UP, DOWN, STARTING, OUT_OF_SERVICE, UNKNOWN
-                 leaseInfo=LeaseInfo(),
-                 isCoordinatingDiscoveryServer=False,
-                 metadata=None,
-                 lastUpdatedTimestamp=0,
-                 lastDirtyTimestamp=0,
-                 actionType=ACTION_TYPE_ADDED,  # ADDED, MODIFIED, DELETED
-                 asgName=""):
+    def __init__(
+        self,
+        instanceId="",
+        sid="",  # @deprecated
+        app="",
+        appGroupName="",
+        ipAddr="",
+        port=PortWrapper(port=_DEFAULT_INSTNACE_PORT, enabled=True),
+        securePort=PortWrapper(port=_DEFAULT_INSTNACE_SECURE_PORT, enabled=False),
+        homePageUrl="",
+        statusPageUrl="",
+        healthCheckUrl="",
+        secureHealthCheckUrl="",
+        vipAddress="",
+        secureVipAddress="",
+        countryId=1,
+        dataCenterInfo=DataCenterInfo(),
+        hostName="",
+        status="",  # UP, DOWN, STARTING, OUT_OF_SERVICE, UNKNOWN
+        overriddenstatus="",  # UP, DOWN, STARTING, OUT_OF_SERVICE, UNKNOWN
+        leaseInfo=LeaseInfo(),
+        isCoordinatingDiscoveryServer=False,
+        metadata=None,
+        lastUpdatedTimestamp=0,
+        lastDirtyTimestamp=0,
+        actionType=ACTION_TYPE_ADDED,  # ADDED, MODIFIED, DELETED
+        asgName="",
+    ):
         self.__instanceId: str = instanceId
         self.sid: str = sid
         self.app: str = app
@@ -141,7 +151,11 @@ class Instance:
 
     @property
     def instanceId(self):
-        return self.__instanceId if self.__instanceId else f"{self.hostName}:{self.ipAddr}:{self.app}:{self.port.port if self.port else 0}"
+        return (
+            self.__instanceId
+            if self.__instanceId
+            else f"{self.hostName}:{self.ipAddr}:{self.app}:{self.port.port if self.port else 0}"
+        )
 
     @instanceId.setter
     def instanceId(self, id):
@@ -149,8 +163,12 @@ class Instance:
 
     @property
     def zone(self) -> str:
-        if self.dataCenterInfo and self.dataCenterInfo.name == "Amazon" \
-                and self.dataCenterInfo.metadata and "availability-zone" in self.dataCenterInfo.metadata:
+        if (
+            self.dataCenterInfo
+            and self.dataCenterInfo.name == "Amazon"
+            and self.dataCenterInfo.metadata
+            and "availability-zone" in self.dataCenterInfo.metadata
+        ):
             return self.dataCenterInfo.metadata["availability-zone"]
         if self.metadata and "zone" in self.metadata and self.metadata["zone"]:
             return self.metadata["zone"]
@@ -159,10 +177,7 @@ class Instance:
 
 
 class Application:
-
-    def __init__(self,
-                 name="",
-                 instances=None):
+    def __init__(self, name="", instances=None):
         self.name: str = name
         if isinstance(instances, list):
             for ins in instances:
@@ -178,7 +193,11 @@ class Application:
     @property
     def up_instances(self) -> List[Instance]:
         with self.__inst_lock:
-            return [item for item in self.__instances_dict.values() if item.status == INSTANCE_STATUS_UP]
+            return [
+                item
+                for item in self.__instances_dict.values()
+                if item.status == INSTANCE_STATUS_UP
+            ]
 
     def get_instance(self, instance_id: str) -> Instance:
         with self.__inst_lock:
@@ -204,20 +223,24 @@ class Application:
     def up_instances_in_zone(self, zone: str) -> List[Instance]:
         with self.__inst_lock:
             _zone = zone if zone else _DEFAUTL_ZONE
-            return [item for item in self.__instances_dict.values() if item.status == INSTANCE_STATUS_UP and item.zone == _zone]
+            return [
+                item
+                for item in self.__instances_dict.values()
+                if item.status == INSTANCE_STATUS_UP and item.zone == _zone
+            ]
 
     def up_instances_not_in_zone(self, zone: str) -> List[Instance]:
         with self.__inst_lock:
             _zone = zone if zone else _DEFAUTL_ZONE
-            return [item for item in self.__instances_dict.values() if item.status == INSTANCE_STATUS_UP and item.zone != _zone]
+            return [
+                item
+                for item in self.__instances_dict.values()
+                if item.status == INSTANCE_STATUS_UP and item.zone != _zone
+            ]
 
 
 class Applications:
-
-    def __init__(self,
-                 apps__hashcode="",
-                 versions__delta="",
-                 applications=None):
+    def __init__(self, apps__hashcode="", versions__delta="", applications=None):
         self.apps__hashcode: str = apps__hashcode
         self.versions__delta: str = versions__delta
         self.__applications = applications if applications is not None else []
@@ -254,43 +277,45 @@ class Applications:
 ####### Registry functions #########
 async def register(eureka_server: str, instance: Instance) -> None:
     instance_dic = {
-        'instanceId': instance.instanceId,
-        'hostName': instance.hostName,
-        'app': instance.app,
-        'ipAddr': instance.ipAddr,
-        'status': instance.status,
-        'overriddenstatus': instance.overriddenstatus,
-        'port': {
-            '$': instance.port.port,
-            '@enabled': str(instance.port.enabled).lower()
+        "instanceId": instance.instanceId,
+        "hostName": instance.hostName,
+        "app": instance.app,
+        "ipAddr": instance.ipAddr,
+        "status": instance.status,
+        "overriddenstatus": instance.overriddenstatus,
+        "port": {
+            "$": instance.port.port,
+            "@enabled": str(instance.port.enabled).lower(),
         },
-        'securePort': {
-            '$': instance.securePort.port,
-            '@enabled': str(instance.securePort.enabled).lower()
+        "securePort": {
+            "$": instance.securePort.port,
+            "@enabled": str(instance.securePort.enabled).lower(),
         },
-        'countryId': instance.countryId,
-        'dataCenterInfo': {
-            '@class': instance.dataCenterInfo.className,
-            'name': instance.dataCenterInfo.name
+        "countryId": instance.countryId,
+        "dataCenterInfo": {
+            "@class": instance.dataCenterInfo.className,
+            "name": instance.dataCenterInfo.name,
         },
-        'leaseInfo': {
-            'renewalIntervalInSecs': instance.leaseInfo.renewalIntervalInSecs,
-            'durationInSecs': instance.leaseInfo.durationInSecs,
-            'registrationTimestamp': instance.leaseInfo.registrationTimestamp,
-            'lastRenewalTimestamp': instance.leaseInfo.lastRenewalTimestamp,
-            'evictionTimestamp': instance.leaseInfo.evictionTimestamp,
-            'serviceUpTimestamp': instance.leaseInfo.serviceUpTimestamp
+        "leaseInfo": {
+            "renewalIntervalInSecs": instance.leaseInfo.renewalIntervalInSecs,
+            "durationInSecs": instance.leaseInfo.durationInSecs,
+            "registrationTimestamp": instance.leaseInfo.registrationTimestamp,
+            "lastRenewalTimestamp": instance.leaseInfo.lastRenewalTimestamp,
+            "evictionTimestamp": instance.leaseInfo.evictionTimestamp,
+            "serviceUpTimestamp": instance.leaseInfo.serviceUpTimestamp,
         },
-        'metadata': instance.metadata,
-        'homePageUrl': instance.homePageUrl,
-        'statusPageUrl': instance.statusPageUrl,
-        'healthCheckUrl': instance.healthCheckUrl,
-        'secureHealthCheckUrl': instance.secureHealthCheckUrl,
-        'vipAddress': instance.vipAddress,
-        'secureVipAddress': instance.secureVipAddress,
-        'lastUpdatedTimestamp': str(instance.lastUpdatedTimestamp),
-        'lastDirtyTimestamp': str(instance.lastDirtyTimestamp),
-        'isCoordinatingDiscoveryServer': str(instance.isCoordinatingDiscoveryServer).lower()
+        "metadata": instance.metadata,
+        "homePageUrl": instance.homePageUrl,
+        "statusPageUrl": instance.statusPageUrl,
+        "healthCheckUrl": instance.healthCheckUrl,
+        "secureHealthCheckUrl": instance.secureHealthCheckUrl,
+        "vipAddress": instance.vipAddress,
+        "secureVipAddress": instance.secureVipAddress,
+        "lastUpdatedTimestamp": str(instance.lastUpdatedTimestamp),
+        "lastDirtyTimestamp": str(instance.lastDirtyTimestamp),
+        "isCoordinatingDiscoveryServer": str(
+            instance.isCoordinatingDiscoveryServer
+        ).lower(),
     }
     if instance.dataCenterInfo.metadata:
         instance_dic["dataCenterInfo"]["metadata"] = instance.dataCenterInfo.metadata
@@ -298,25 +323,34 @@ async def register(eureka_server: str, instance: Instance) -> None:
 
 
 async def _register(eureka_server: str, instance_dic: Dict) -> None:
-    req = http_client.HttpRequest(f"{_format_url(eureka_server)}apps/{quote(instance_dic['app'])}",
-                                  method="POST",
-                                  headers={"Content-Type": "application/json"})
-    await http_client.http_client.urlopen(req, json.dumps({"instance": instance_dic}).encode(
-        _DEFAULT_ENCODING), timeout=_DEFAULT_TIME_OUT)
+    req = http_client.HttpRequest(
+        f"{_format_url(eureka_server)}apps/{quote(instance_dic['app'])}",
+        method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    await http_client.http_client.urlopen(
+        req,
+        json.dumps({"instance": instance_dic}).encode(_DEFAULT_ENCODING),
+        timeout=_DEFAULT_TIME_OUT,
+    )
 
 
 async def cancel(eureka_server: str, app_name: str, instance_id: str) -> None:
-    req = http_client.HttpRequest(f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}",
-                                  method="DELETE")
+    req = http_client.HttpRequest(
+        f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}",
+        method="DELETE",
+    )
     await http_client.http_client.urlopen(req, timeout=_DEFAULT_TIME_OUT)
 
 
-async def send_heartbeat(eureka_server: str,
-                         app_name: str,
-                         instance_id: str,
-                         last_dirty_timestamp: int,
-                         status: str = INSTANCE_STATUS_UP,
-                         overriddenstatus: str = "") -> None:
+async def send_heartbeat(
+    eureka_server: str,
+    app_name: str,
+    instance_id: str,
+    last_dirty_timestamp: int,
+    status: str = INSTANCE_STATUS_UP,
+    overriddenstatus: str = "",
+) -> None:
     url = f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}?status={status}&lastDirtyTimestamp={last_dirty_timestamp}"
     if overriddenstatus != "":
         url += f"&overriddenstatus={overriddenstatus}"
@@ -325,12 +359,14 @@ async def send_heartbeat(eureka_server: str,
     await http_client.http_client.urlopen(req, timeout=_DEFAULT_TIME_OUT)
 
 
-async def status_update(eureka_server: str,
-                        app_name: str,
-                        instance_id: str,
-                        last_dirty_timestamp,
-                        status: str = INSTANCE_STATUS_OUT_OF_SERVICE,
-                        overriddenstatus: str = ""):
+async def status_update(
+    eureka_server: str,
+    app_name: str,
+    instance_id: str,
+    last_dirty_timestamp,
+    status: str = INSTANCE_STATUS_OUT_OF_SERVICE,
+    overriddenstatus: str = "",
+):
     url = f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}/status?value={status}&lastDirtyTimestamp={last_dirty_timestamp}"
     if overriddenstatus != "":
         url += f"&overriddenstatus={overriddenstatus}"
@@ -339,7 +375,9 @@ async def status_update(eureka_server: str,
     await http_client.http_client.urlopen(req, timeout=_DEFAULT_TIME_OUT)
 
 
-async def delete_status_override(eureka_server: str, app_name: str, instance_id: str, last_dirty_timestamp: str):
+async def delete_status_override(
+    eureka_server: str, app_name: str, instance_id: str, last_dirty_timestamp: str
+):
     url = f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}/status?lastDirtyTimestamp={last_dirty_timestamp}"
 
     req = http_client.HttpRequest(url, method="DELETE")
@@ -355,7 +393,7 @@ async def get_applications(eureka_server: str, regions: List[str] = []) -> Appli
 
 
 def _format_url(url):
-    if url.endswith('/'):
+    if url.endswith("/"):
         return url
     else:
         return url + "/"
@@ -364,12 +402,12 @@ def _format_url(url):
 async def _get_applications_(url, regions=[]):
     _url = url
     if len(regions) > 0:
-        _url = _url + ("&" if "?" in _url else "?") + \
-            "regions=" + (",".join(regions))
+        _url = _url + ("&" if "?" in _url else "?") + "regions=" + (",".join(regions))
 
-    res = await http_client.http_client.urlopen(
-        _url, timeout=_DEFAULT_TIME_OUT)
-    return _build_applications(ElementTree.fromstring(res.body_text.encode(_DEFAULT_ENCODING)))
+    res = await http_client.http_client.urlopen(_url, timeout=_DEFAULT_TIME_OUT)
+    return _build_applications(
+        ElementTree.fromstring(res.body_text.encode(_DEFAULT_ENCODING))
+    )
 
 
 def _build_applications(xml_node):
@@ -443,8 +481,7 @@ def _build_instance(xml_node):
         elif child_node.tag == "leaseInfo":
             instance.leaseInfo = _build_lease_info(child_node)
         elif child_node.tag == "isCoordinatingDiscoveryServer":
-            instance.isCoordinatingDiscoveryServer = (
-                child_node.text == "true")
+            instance.isCoordinatingDiscoveryServer = child_node.text == "true"
         elif child_node.tag == "metadata":
             instance.metadata = _build_metadata(child_node)
         elif child_node.tag == "lastUpdatedTimestamp":
@@ -503,7 +540,7 @@ def _build_lease_info(xml_node):
 def _build_port(xml_node):
     port = PortWrapper()
     port.port = int(xml_node.text)
-    port.enabled = (xml_node.attrib["enabled"] == "true")
+    port.enabled = xml_node.attrib["enabled"] == "true"
     return port
 
 
@@ -512,12 +549,16 @@ async def get_delta(eureka_server: str, regions: List[str] = []) -> Applications
     return res
 
 
-async def get_vip(eureka_server: str, vip: str, regions: List[str] = []) -> Applications:
+async def get_vip(
+    eureka_server: str, vip: str, regions: List[str] = []
+) -> Applications:
     res = await _get_applications_(f"{_format_url(eureka_server)}vips/{vip}", regions)
     return res
 
 
-async def get_secure_vip(eureka_server: str, svip: str, regions: List[str] = []) -> Applications:
+async def get_secure_vip(
+    eureka_server: str, svip: str, regions: List[str] = []
+) -> Applications:
     res = await _get_applications_(f"{_format_url(eureka_server)}svips/{svip}", regions)
     return res
 
@@ -528,18 +569,20 @@ async def get_application(eureka_server: str, app_name: str) -> Application:
     return _build_application(ElementTree.fromstring(res.body_text))
 
 
-async def get_app_instance(eureka_server: str, app_name: str, instance_id: str) -> Instance:
-    res = await _get_instance_(f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}")
+async def get_app_instance(
+    eureka_server: str, app_name: str, instance_id: str
+) -> Instance:
+    res = await _get_instance_(
+        f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}"
+    )
     return res
 
 
 async def get_instance(eureka_server: str, instance_id: str) -> Instance:
-    res = _get_instance_(
-        f"{_format_url(eureka_server)}instances/{quote(instance_id)}")
+    res = _get_instance_(f"{_format_url(eureka_server)}instances/{quote(instance_id)}")
     return res
 
 
 async def _get_instance_(url):
-    res = await http_client.http_client.urlopen(
-        url, timeout=_DEFAULT_TIME_OUT)
+    res = await http_client.http_client.urlopen(url, timeout=_DEFAULT_TIME_OUT)
     return _build_instance(ElementTree.fromstring(res.body_text))

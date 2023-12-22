@@ -64,7 +64,7 @@ ERROR_STATUS_UPDATE: str = "EUREKA_ERROR_STATUS_UPDATE"
 """
 Default eureka server url.
 """
-_DEFAULT_EUREKA_SERVER_URL = "http://127.0.0.1:8761/eureka/"
+_DEFAULT_EUREKA_SERVER_URL = "http://127.0.0.1:8761/"
 """
 Default instance field values
 """
@@ -73,7 +73,9 @@ _DEFAULT_INSTNACE_SECURE_PORT = 9443
 _RENEWAL_INTERVAL_IN_SECS = 30
 _DURATION_IN_SECS = 90
 _DEFAULT_DATA_CENTER_INFO = "MyOwn"
-_DEFAULT_DATA_CENTER_INFO_CLASS = "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo"
+_DEFAULT_DATA_CENTER_INFO_CLASS = (
+    "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo"
+)
 _AMAZON_DATA_CENTER_INFO_CLASS = "com.netflix.appinfo.AmazonInfo"
 """
 Default configurations

@@ -26,6 +26,6 @@ import dns.resolver
 
 
 def get_txt_dns_record(domain):
-    records = dns.resolver.resolve(domain, 'TXT')
+    records = dns.resolver.resolve(domain, "TXT")
     if len(records):
-        return str(records[0]).replace('"', '').split(' ')
+        return str(records[0]).replace('"', "").split(" ")
