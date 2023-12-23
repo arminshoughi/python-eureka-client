@@ -1,38 +1,26 @@
 import json
-
 from threading import RLock
-from typing import Dict, List, Optional
 from urllib.parse import quote
+from typing import Dict, List, Optional
 import xml.etree.ElementTree as ElementTree
 
+import py_eureka_client
 from py_eureka_client.logger import get_logger
 import py_eureka_client.http_client as http_client
-
-from py_eureka_client import INSTANCE_STATUS_UP, INSTANCE_STATUS_OUT_OF_SERVICE
-from py_eureka_client import ACTION_TYPE_ADDED
-from py_eureka_client import (
-    DEFAULT_INSTANCE_PORT,
-    DEFAULT_INSTANCE_SECURE_PORT,
-    RENEWAL_INTERVAL_IN_SECS,
-    DURATION_IN_SECS,
-    DEFAULT_DATA_CENTER_INFO,
-    DEFAULT_DATA_CENTER_INFO_CLASS,
-)
-from py_eureka_client import DEFAULT_ENCODING, DEFAULT_ZONE, _DEFAULT_TIME_OUT
 
 _logger = get_logger("eureka_basic")
 
 
 class LeaseInfo:
     def __init__(
-            self,
-            renewalIntervalInSecs: int = RENEWAL_INTERVAL_IN_SECS,
-            durationInSecs: int = DURATION_IN_SECS,
-            registrationTimestamp: int = 0,
-            lastRenewalTimestamp: int = 0,
-            renewalTimestamp: int = 0,
-            evictionTimestamp: int = 0,
-            serviceUpTimestamp: int = 0,
+        self,
+        renewalIntervalInSecs: int = py_eureka_client.RENEWAL_INTERVAL_IN_SECS,
+        durationInSecs: int = py_eureka_client.DURATION_IN_SECS,
+        registrationTimestamp: int = 0,
+        lastRenewalTimestamp: int = 0,
+        renewalTimestamp: int = 0,
+        evictionTimestamp: int = 0,
+        serviceUpTimestamp: int = 0,
     ):
         self.renewalIntervalInSecs: int = renewalIntervalInSecs
         self.durationInSecs: int = durationInSecs
@@ -45,10 +33,10 @@ class LeaseInfo:
 
 class DataCenterInfo:
     def __init__(
-            self,
-            name=DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
-            className=DEFAULT_DATA_CENTER_INFO_CLASS,
-            metadata={},
+        self,
+        name=py_eureka_client.DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
+        className=py_eureka_client.DEFAULT_DATA_CENTER_INFO_CLASS,
+        metadata={},
     ):
         self.name: str = name
         self.className: str = className
@@ -63,32 +51,34 @@ class PortWrapper:
 
 class Instance:
     def __init__(
-            self,
-            instanceId="",
-            sid="",  # @deprecated
-            app="",
-            appGroupName="",
-            ipAddr="",
-            port=PortWrapper(port=DEFAULT_INSTANCE_PORT, enabled=True),
-            securePort=PortWrapper(port=DEFAULT_INSTANCE_SECURE_PORT, enabled=False),
-            homePageUrl="",
-            statusPageUrl="",
-            healthCheckUrl="",
-            secureHealthCheckUrl="",
-            vipAddress="",
-            secureVipAddress="",
-            countryId=1,
-            dataCenterInfo=DataCenterInfo(),
-            hostName="",
-            status="",  # UP, DOWN, STARTING, OUT_OF_SERVICE, UNKNOWN
-            overriddenstatus="",  # UP, DOWN, STARTING, OUT_OF_SERVICE, UNKNOWN
-            leaseInfo=LeaseInfo(),
-            isCoordinatingDiscoveryServer=False,
-            metadata=None,
-            lastUpdatedTimestamp=0,
-            lastDirtyTimestamp=0,
-            actionType=ACTION_TYPE_ADDED,  # ADDED, MODIFIED, DELETED
-            asgName="",
+        self,
+        instanceId="",
+        sid="",  # @deprecated
+        app="",
+        appGroupName="",
+        ipAddr="",
+        port=PortWrapper(port=py_eureka_client.DEFAULT_INSTANCE_PORT, enabled=True),
+        securePort=PortWrapper(
+            port=py_eureka_client.DEFAULT_INSTANCE_SECURE_PORT, enabled=False
+        ),
+        homePageUrl="",
+        statusPageUrl="",
+        healthCheckUrl="",
+        secureHealthCheckUrl="",
+        vipAddress="",
+        secureVipAddress="",
+        countryId=1,
+        dataCenterInfo=DataCenterInfo(),
+        hostName="",
+        status="",  # UP, DOWN, STARTING, OUT_OF_SERVICE, UNKNOWN
+        overriddenstatus="",  # UP, DOWN, STARTING, OUT_OF_SERVICE, UNKNOWN
+        leaseInfo=LeaseInfo(),
+        isCoordinatingDiscoveryServer=False,
+        metadata=None,
+        lastUpdatedTimestamp=0,
+        lastDirtyTimestamp=0,
+        actionType=py_eureka_client.ACTION_TYPE_ADDED,  # ADDED, MODIFIED, DELETED
+        asgName="",
     ):
         self.__instanceId: str = instanceId
         self.sid: str = sid
@@ -131,16 +121,16 @@ class Instance:
     @property
     def zone(self) -> str:
         if (
-                self.dataCenterInfo
-                and self.dataCenterInfo.name == "Amazon"
-                and self.dataCenterInfo.metadata
-                and "availability-zone" in self.dataCenterInfo.metadata
+            self.dataCenterInfo
+            and self.dataCenterInfo.name == "Amazon"
+            and self.dataCenterInfo.metadata
+            and "availability-zone" in self.dataCenterInfo.metadata
         ):
             return self.dataCenterInfo.metadata["availability-zone"]
         if self.metadata and "zone" in self.metadata and self.metadata["zone"]:
             return self.metadata["zone"]
         else:
-            return DEFAULT_ZONE
+            return py_eureka_client.DEFAULT_ZONE
 
 
 class Application:
@@ -163,7 +153,7 @@ class Application:
             return [
                 item
                 for item in self.__instances_dict.values()
-                if item.status == INSTANCE_STATUS_UP
+                if item.status == py_eureka_client.INSTANCE_STATUS_UP
             ]
 
     def get_instance(self, instance_id: str) -> Instance:
@@ -189,20 +179,22 @@ class Application:
 
     def up_instances_in_zone(self, zone: str) -> List[Instance]:
         with self.__inst_lock:
-            _zone = zone if zone else DEFAULT_ZONE
+            _zone = zone if zone else py_eureka_client.DEFAULT_ZONE
             return [
                 item
                 for item in self.__instances_dict.values()
-                if item.status == INSTANCE_STATUS_UP and item.zone == _zone
+                if item.status == py_eureka_client.INSTANCE_STATUS_UP
+                and item.zone == _zone
             ]
 
     def up_instances_not_in_zone(self, zone: str) -> List[Instance]:
         with self.__inst_lock:
-            _zone = zone if zone else DEFAULT_ZONE
+            _zone = zone if zone else py_eureka_client.DEFAULT_ZONE
             return [
                 item
                 for item in self.__instances_dict.values()
-                if item.status == INSTANCE_STATUS_UP and item.zone != _zone
+                if item.status == py_eureka_client.INSTANCE_STATUS_UP
+                and item.zone != _zone
             ]
 
 
@@ -297,8 +289,10 @@ async def _register(eureka_server: str, instance_dic: Dict) -> None:
     )
     await http_client.http_client.urlopen(
         req,
-        json.dumps({"instance": instance_dic}).encode(DEFAULT_ENCODING),
-        timeout=_DEFAULT_TIME_OUT,
+        json.dumps({"instance": instance_dic}).encode(
+            py_eureka_client.DEFAULT_ENCODING
+        ),
+        timeout=py_eureka_client.DEFAULT_TIME_OUT,
     )
 
 
@@ -307,48 +301,65 @@ async def cancel(eureka_server: str, app_name: str, instance_id: str) -> None:
         f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}",
         method="DELETE",
     )
-    await http_client.http_client.urlopen(req, timeout=_DEFAULT_TIME_OUT)
+    await http_client.http_client.urlopen(
+        req, timeout=py_eureka_client.DEFAULT_TIME_OUT
+    )
 
 
 async def send_heartbeat(
-        eureka_server: str,
-        app_name: str,
-        instance_id: str,
-        last_dirty_timestamp: int,
-        status: str = INSTANCE_STATUS_UP,
-        overriddenstatus: str = "",
+    eureka_server: str,
+    app_name: str,
+    instance_id: str,
+    last_dirty_timestamp: int,
+    status: str = py_eureka_client.INSTANCE_STATUS_UP,
+    overriddenstatus: str = "",
 ) -> None:
-    url = f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}?status={status}&lastDirtyTimestamp={last_dirty_timestamp}"
+    url = (
+        f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}"
+        f"?status={status}&lastDirtyTimestamp={last_dirty_timestamp}"
+    )
     if overriddenstatus != "":
         url += f"&overriddenstatus={overriddenstatus}"
 
     req = http_client.HttpRequest(url, method="PUT")
-    await http_client.http_client.urlopen(req, timeout=_DEFAULT_TIME_OUT)
+    await http_client.http_client.urlopen(
+        req, timeout=py_eureka_client.DEFAULT_TIME_OUT
+    )
 
 
 async def status_update(
-        eureka_server: str,
-        app_name: str,
-        instance_id: str,
-        last_dirty_timestamp,
-        status: str = INSTANCE_STATUS_OUT_OF_SERVICE,
-        overriddenstatus: str = "",
+    eureka_server: str,
+    app_name: str,
+    instance_id: str,
+    last_dirty_timestamp,
+    status: str = py_eureka_client.INSTANCE_STATUS_OUT_OF_SERVICE,
+    overriddenstatus: str = "",
 ):
-    url = f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}/status?value={status}&lastDirtyTimestamp={last_dirty_timestamp}"
+    url = (
+        f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}"
+        f"/status?value={status}&lastDirtyTimestamp={last_dirty_timestamp}"
+    )
     if overriddenstatus != "":
         url += f"&overriddenstatus={overriddenstatus}"
 
     req = http_client.HttpRequest(url, method="PUT")
-    await http_client.http_client.urlopen(req, timeout=_DEFAULT_TIME_OUT)
+    await http_client.http_client.urlopen(
+        req, timeout=py_eureka_client.DEFAULT_TIME_OUT
+    )
 
 
 async def delete_status_override(
-        eureka_server: str, app_name: str, instance_id: str, last_dirty_timestamp: str
+    eureka_server: str, app_name: str, instance_id: str, last_dirty_timestamp: str
 ):
-    url = f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}/status?lastDirtyTimestamp={last_dirty_timestamp}"
+    url = (
+        f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}"
+        f"/status?lastDirtyTimestamp={last_dirty_timestamp}"
+    )
 
     req = http_client.HttpRequest(url, method="DELETE")
-    await http_client.http_client.urlopen(req, timeout=_DEFAULT_TIME_OUT)
+    await http_client.http_client.urlopen(
+        req, timeout=py_eureka_client.DEFAULT_TIME_OUT
+    )
 
 
 ####### Discovory functions ########
@@ -371,9 +382,11 @@ async def _get_applications_(url, regions=[]):
     if len(regions) > 0:
         _url = _url + ("&" if "?" in _url else "?") + "regions=" + (",".join(regions))
 
-    res = await http_client.http_client.urlopen(_url, timeout=_DEFAULT_TIME_OUT)
+    res = await http_client.http_client.urlopen(
+        _url, timeout=py_eureka_client.DEFAULT_TIME_OUT
+    )
     return _build_applications(
-        ElementTree.fromstring(res.body_text.encode(DEFAULT_ENCODING))
+        ElementTree.fromstring(res.body_text.encode(py_eureka_client.DEFAULT_ENCODING))
     )
 
 
@@ -517,14 +530,14 @@ async def get_delta(eureka_server: str, regions: List[str] = []) -> Applications
 
 
 async def get_vip(
-        eureka_server: str, vip: str, regions: List[str] = []
+    eureka_server: str, vip: str, regions: List[str] = []
 ) -> Applications:
     res = await _get_applications_(f"{_format_url(eureka_server)}vips/{vip}", regions)
     return res
 
 
 async def get_secure_vip(
-        eureka_server: str, svip: str, regions: List[str] = []
+    eureka_server: str, svip: str, regions: List[str] = []
 ) -> Applications:
     res = await _get_applications_(f"{_format_url(eureka_server)}svips/{svip}", regions)
     return res
@@ -532,12 +545,14 @@ async def get_secure_vip(
 
 async def get_application(eureka_server: str, app_name: str) -> Application:
     url = f"{_format_url(eureka_server)}apps/{quote(app_name)}"
-    res = await http_client.http_client.urlopen(url, timeout=_DEFAULT_TIME_OUT)
+    res = await http_client.http_client.urlopen(
+        url, timeout=py_eureka_client.DEFAULT_TIME_OUT
+    )
     return _build_application(ElementTree.fromstring(res.body_text))
 
 
 async def get_app_instance(
-        eureka_server: str, app_name: str, instance_id: str
+    eureka_server: str, app_name: str, instance_id: str
 ) -> Instance:
     res = await _get_instance_(
         f"{_format_url(eureka_server)}apps/{quote(app_name)}/{quote(instance_id)}"
@@ -550,5 +565,7 @@ async def get_instance(eureka_server: str, instance_id: str) -> Instance:
 
 
 async def _get_instance_(url) -> Optional[Instance]:
-    res = await http_client.http_client.urlopen(url, timeout=_DEFAULT_TIME_OUT)
+    res = await http_client.http_client.urlopen(
+        url, timeout=py_eureka_client.DEFAULT_TIME_OUT
+    )
     return _build_instance(ElementTree.fromstring(res.body_text))
