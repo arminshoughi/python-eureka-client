@@ -8,8 +8,6 @@ from typing import Callable, Dict, List, Union
 import py_eureka_client.http_client as http_client
 import py_eureka_client.netint_utils as netint
 from py_eureka_client.logger import get_logger
-from py_eureka_client.__dns_txt_resolver import get_txt_dns_record
-from py_eureka_client.__aws_info_loader import AmazonInfo
 
 import py_eureka_client
 
@@ -41,7 +39,7 @@ class EurekaServerConf(object):
         eureka_basic_auth_user="",
         eureka_basic_auth_password="",
         eureka_context="eureka/v2",
-        eureka_availability_zones={},
+        eureka_availability_zones=None,
         region="",
         zone="",
     ):
@@ -50,22 +48,7 @@ class EurekaServerConf(object):
         self.__zone = zone
         self.__eureka_availability_zones: dict = eureka_availability_zones
         _zone = zone if zone else py_eureka_client.DEFAULT_ZONE
-        if eureka_domain:
-            zone_urls = get_txt_dns_record(f"txt.{region}.{eureka_domain}")
-            for zone_url in zone_urls:
-                zone_name = zone_url.split(".")[0]
-                eureka_urls = get_txt_dns_record(f"txt.{zone_url}")
-                self.__servers[zone_name] = [
-                    self._format_url(
-                        eureka_url.strip(),
-                        eureka_protocol,
-                        eureka_basic_auth_user,
-                        eureka_basic_auth_password,
-                        eureka_context,
-                    )
-                    for eureka_url in eureka_urls
-                ]
-        elif eureka_availability_zones:
+        if eureka_availability_zones:
             for zone_name, v in eureka_availability_zones.items():
                 if isinstance(v, list):
                     eureka_urls = v
@@ -452,9 +435,7 @@ class EurekaClient:
 
         self.__application_mth_lock = RLock()
 
-    async def __parepare_instance_info(self):
-        if self.__data_center_name == "Amazon":
-            self.__aws_metadata = await self.__load_ec2_metadata_dict()
+    async def __prepare_instance_info(self):
         if self.__instance_host == "" and self.__instance_ip == "":
             self.__instance_ip, self.__instance_host = self.__get_ip_host(
                 self.__instance_ip_network
@@ -548,40 +529,6 @@ class EurekaClient:
         ):
             host = self.__aws_metadata["local-hostname"]
         return ip, host
-
-    async def __load_ec2_metadata_dict(self):
-        # instance metadata
-        amazon_info = AmazonInfo()
-        mac = await amazon_info.get_ec2_metadata("mac")
-        if mac:
-            vpc_id = await amazon_info.get_ec2_metadata(
-                f"network/interfaces/macs/{mac}/vpc-id"
-            )
-        else:
-            vpc_id = ""
-        metadata = {
-            "instance-id": amazon_info.get_ec2_metadata("instance-id"),
-            "ami-id": amazon_info.get_ec2_metadata("ami-id"),
-            "instance-type": amazon_info.get_ec2_metadata("instance-type"),
-            "local-ipv4": amazon_info.get_ec2_metadata("local-ipv4"),
-            "local-hostname": amazon_info.get_ec2_metadata("local-hostname"),
-            "availability-zone": amazon_info.get_ec2_metadata(
-                "placement/availability-zone", ignore_error=True
-            ),
-            "public-hostname": amazon_info.get_ec2_metadata(
-                "public-hostname", ignore_error=True
-            ),
-            "public-ipv4": amazon_info.get_ec2_metadata(
-                "public-ipv4", ignore_error=True
-            ),
-            "mac": mac,
-            "vpcId": vpc_id,
-        }
-        # accountId
-        doc = await amazon_info.get_instance_identity_document()
-        if doc and "accountId" in doc:
-            metadata["accountId"] = doc["accountId"]
-        return metadata
 
     @property
     def should_register(self) -> bool:
@@ -1160,7 +1107,7 @@ class EurekaClient:
 
     async def start(self) -> None:
         if self.should_register:
-            await self.__parepare_instance_info()
+            await self.__prepare_instance_info()
             await self.__start_register()
         if self.should_discover:
             await self.__start_discover()
