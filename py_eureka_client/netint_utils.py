@@ -19,7 +19,7 @@ def get_ip_by_host(host):
     try:
         return socket.gethostbyname(host)
     except:
-        _logger.warn("Error when getting ip by host", exc_info=True)
+        _logger.warning("Error when getting ip by host", exc_info=True)
         return host
 
 
@@ -39,10 +39,7 @@ def get_first_non_loopback_ip(network: str = "") -> str:
 
 def get_ip_and_host(network: str = "") -> Tuple[str, str]:
     ip = get_first_non_loopback_ip(network=network)
+    host = socket.gethostname() if not ip else get_host_by_ip(ip)
     if not ip:
-        host = socket.gethostname()
         ip = socket.gethostbyname(host)
-    else:
-        host = get_host_by_ip(ip)
-
     return ip, host

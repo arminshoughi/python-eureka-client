@@ -14,9 +14,6 @@ class URLError(urllib.error.URLError):
     pass
 
 
-"""
-Default encoding
-"""
 _DEFAULT_ENCODING = "utf-8"
 
 _URL_REGEX = re.compile(
