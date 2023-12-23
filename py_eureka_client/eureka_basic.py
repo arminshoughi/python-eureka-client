@@ -34,9 +34,9 @@ class LeaseInfo:
 class DataCenterInfo:
     def __init__(
         self,
-        name=py_eureka_client.DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
+        name=py_eureka_client.DEFAULT_DATA_CENTER_INFO,
         className=py_eureka_client.DEFAULT_DATA_CENTER_INFO_CLASS,
-        metadata={},
+        metadata=None,
     ):
         self.name: str = name
         self.className: str = className
@@ -156,12 +156,10 @@ class Application:
                 if item.status == py_eureka_client.INSTANCE_STATUS_UP
             ]
 
-    def get_instance(self, instance_id: str) -> Instance:
+    def get_instance(self, instance_id: str) -> Optional[Instance]:
         with self.__inst_lock:
             if instance_id in self.__instances_dict:
                 return self.__instances_dict[instance_id]
-            else:
-                return None
 
     def add_instance(self, instance: Instance) -> None:
         with self.__inst_lock:
@@ -232,8 +230,6 @@ class Applications:
                 return Application(name=aname)
 
 
-########################## Basic functions #################################
-####### Registry functions #########
 async def register(eureka_server: str, instance: Instance) -> None:
     instance_dic = {
         "instanceId": instance.instanceId,
@@ -362,19 +358,13 @@ async def delete_status_override(
     )
 
 
-####### Discovory functions ########
-
-
 async def get_applications(eureka_server: str, regions: List[str] = []) -> Applications:
     res = await _get_applications_(f"{_format_url(eureka_server)}apps/", regions)
     return res
 
 
 def _format_url(url):
-    if url.endswith("/"):
-        return url
-    else:
-        return url + "/"
+    return url if url.endswith("/") else f"{url}/"
 
 
 async def _get_applications_(url, regions=[]):
@@ -420,6 +410,7 @@ def _build_application(xml_node):
 def _build_instance(xml_node) -> Optional[Instance]:
     if xml_node.tag != "instance":
         return None
+
     instance = Instance()
     for child_node in xml_node:
         if child_node.tag == "instanceId":
