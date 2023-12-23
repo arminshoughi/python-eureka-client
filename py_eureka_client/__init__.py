@@ -66,4 +66,4 @@ DEFAULT_ZONE = "fa-ir"
 """
 The timeout seconds that all http request to the eureka server
 """
-_DEFAULT_TIME_OUT = 5
+DEFAULT_TIME_OUT = 5

@@ -72,18 +72,18 @@ class LoggerFactory:
 
     DEFAULT_DATE_FORMAT: str = "%Y-%m-%d %H:%M:%S"
 
-    _LOG_LVELS: Tuple[str] = ("DEBUG", "INFO", "WARN", "ERROR")
+    _LOG_LEVELS: Tuple[str] = ("DEBUG", "INFO", "WARN", "ERROR")
 
     def __init__(
-            self,
-            log_level: str = "INFO",
-            log_format: str = DEFAULT_LOG_FORMAT,
-            date_format: str = DEFAULT_DATE_FORMAT,
+        self,
+        log_level: str = "INFO",
+        log_format: str = DEFAULT_LOG_FORMAT,
+        date_format: str = DEFAULT_DATE_FORMAT,
     ) -> None:
         self.__cache_loggers: Dict[str, CachingLogger] = {}
         self._log_level = (
             log_level.upper()
-            if log_level and log_level.upper() in self._LOG_LVELS
+            if log_level and log_level.upper() in self._LOG_LEVELS
             else "INFO"
         )
         self.log_format = log_format
@@ -110,7 +110,7 @@ class LoggerFactory:
     def log_level(self, log_level: str):
         self._log_level = (
             log_level.upper()
-            if log_level and log_level.upper() in self._LOG_LVELS
+            if log_level and log_level.upper() in self._LOG_LEVELS
             else "INFO"
         )
         _logger_ = self.get_logger("Logger")
