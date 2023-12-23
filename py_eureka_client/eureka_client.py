@@ -11,42 +11,16 @@ from py_eureka_client.logger import get_logger
 from py_eureka_client.__dns_txt_resolver import get_txt_dns_record
 from py_eureka_client.__aws_info_loader import AmazonInfo
 
-from py_eureka_client import (
-    INSTANCE_STATUS_UP,
-    INSTANCE_STATUS_DOWN,
-    INSTANCE_STATUS_UNKNOWN,
-)
-from py_eureka_client import (
-    ACTION_TYPE_ADDED,
-    ACTION_TYPE_MODIFIED,
-    ACTION_TYPE_DELETED,
-)
-from py_eureka_client import HA_STRATEGY_RANDOM, HA_STRATEGY_STICK, HA_STRATEGY_OTHER
-from py_eureka_client import ERROR_REGISTER, ERROR_DISCOVER, ERROR_STATUS_UPDATE
-from py_eureka_client import (
-    DEFAULT_EUREKA_SERVER_URL,
-    DEFAULT_INSTANCE_PORT,
-    DEFAULT_INSTANCE_SECURE_PORT,
-    RENEWAL_INTERVAL_IN_SECS,
-    DURATION_IN_SECS,
-    DEFAULT_DATA_CENTER_INFO,
-    DEFAULT_DATA_CENTER_INFO_CLASS,
-    AMAZON_DATA_CENTER_INFO_CLASS,
-)
-from py_eureka_client import DEFAULT_ZONE, _DEFAULT_TIME_OUT
+import py_eureka_client
 
 from py_eureka_client.eureka_basic import (
     Instance,
     Applications,
-)
-from py_eureka_client.eureka_basic import (
     _register,
     cancel,
     send_heartbeat,
     status_update,
     delete_status_override,
-)
-from py_eureka_client.eureka_basic import (
     get_applications,
     get_delta,
 )
@@ -57,10 +31,11 @@ _logger = get_logger("eureka_client")
 def _current_time_millis():
     return int(time.time() * 1000)
 
+
 class EurekaServerConf(object):
     def __init__(
         self,
-        eureka_server=DEFAULT_EUREKA_SERVER_URL,
+        eureka_server=py_eureka_client.DEFAULT_EUREKA_SERVER_URL,
         eureka_domain="",
         eureka_protocol="http",
         eureka_basic_auth_user="",
@@ -74,7 +49,7 @@ class EurekaServerConf(object):
         self.region: str = region
         self.__zone = zone
         self.__eureka_availability_zones: dict = eureka_availability_zones
-        _zone = zone if zone else DEFAULT_ZONE
+        _zone = zone if zone else py_eureka_client.DEFAULT_ZONE
         if eureka_domain:
             zone_urls = get_txt_dns_record(f"txt.{region}.{eureka_domain}")
             for zone_url in zone_urls:
@@ -128,7 +103,7 @@ class EurekaServerConf(object):
         elif self.__eureka_availability_zones:
             return list(self.__eureka_availability_zones.keys())[0]
         else:
-            return DEFAULT_ZONE
+            return py_eureka_client.DEFAULT_ZONE
 
     def _format_url(
         self,
@@ -364,7 +339,7 @@ class EurekaClient:
 
     def __init__(
         self,
-        eureka_server: str = DEFAULT_EUREKA_SERVER_URL,
+        eureka_server: str = py_eureka_client.DEFAULT_EUREKA_SERVER_URL,
         eureka_domain: str = "",
         region: str = "",
         zone: str = "",
@@ -382,13 +357,13 @@ class EurekaClient:
         instance_host: str = "",
         instance_ip: str = "",
         instance_ip_network: str = "",
-        instance_port: int = DEFAULT_INSTANCE_PORT,
+        instance_port: int = py_eureka_client.DEFAULT_INSTANCE_PORT,
         instance_unsecure_port_enabled: bool = True,
-        instance_secure_port: int = DEFAULT_INSTANCE_SECURE_PORT,
+        instance_secure_port: int = py_eureka_client.DEFAULT_INSTANCE_SECURE_PORT,
         instance_secure_port_enabled: bool = False,
-        data_center_name: str = DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
-        renewal_interval_in_secs: int = RENEWAL_INTERVAL_IN_SECS,
-        duration_in_secs: int = DURATION_IN_SECS,
+        data_center_name: str = py_eureka_client.DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
+        renewal_interval_in_secs: int = py_eureka_client.RENEWAL_INTERVAL_IN_SECS,
+        duration_in_secs: int = py_eureka_client.DURATION_IN_SECS,
         home_page_url: str = "",
         status_page_url: str = "",
         health_check_url: str = "",
@@ -398,7 +373,7 @@ class EurekaClient:
         is_coordinating_discovery_server: bool = False,
         metadata: Dict = {},
         remote_regions: List[str] = [],
-        ha_strategy: int = HA_STRATEGY_RANDOM,
+        ha_strategy: int = py_eureka_client.HA_STRATEGY_RANDOM,
         strict_service_error_policy: bool = True,
     ):
         assert (
@@ -407,7 +382,12 @@ class EurekaClient:
         assert instance_port > 0 if should_register else True, "port is unvalid"
         assert isinstance(metadata, dict), "metadata must be dict"
         assert (
-            ha_strategy in (HA_STRATEGY_RANDOM, HA_STRATEGY_STICK, HA_STRATEGY_OTHER)
+            ha_strategy
+            in (
+                py_eureka_client.HA_STRATEGY_RANDOM,
+                py_eureka_client.HA_STRATEGY_STICK,
+                py_eureka_client.HA_STRATEGY_OTHER,
+            )
             if should_discover
             else True
         ), f"do not support strategy {ha_strategy}"
@@ -514,9 +494,9 @@ class EurekaClient:
             },
             "countryId": 1,
             "dataCenterInfo": {
-                "@class": AMAZON_DATA_CENTER_INFO_CLASS
+                "@class": py_eureka_client.AMAZON_DATA_CENTER_INFO_CLASS
                 if self.__data_center_name == "Amazon"
-                else DEFAULT_DATA_CENTER_INFO_CLASS,
+                else py_eureka_client.DEFAULT_DATA_CENTER_INFO_CLASS,
                 "name": self.__data_center_name,
             },
             "leaseInfo": {
@@ -695,11 +675,11 @@ class EurekaClient:
             await self.__try_eureka_server_regardless_zones(fun)
 
     async def __try_eureka_servers_in_list(
-        self, fun, eureka_servers=[], zone=DEFAULT_ZONE
+        self, fun, eureka_servers=[], zone=py_eureka_client.DEFAULT_ZONE
     ):
         with self.__net_lock:
             ok = False
-            _zone = zone if zone else DEFAULT_ZONE
+            _zone = zone if zone else py_eureka_client.DEFAULT_ZONE
             for url in eureka_servers:
                 url = url.strip()
                 try:
@@ -782,8 +762,8 @@ class EurekaClient:
 
     async def register(
         self,
-        status: str = INSTANCE_STATUS_UP,
-        overriddenstatus: str = INSTANCE_STATUS_UNKNOWN,
+        status: str = py_eureka_client.INSTANCE_STATUS_UP,
+        overriddenstatus: str = py_eureka_client.INSTANCE_STATUS_UNKNOWN,
     ) -> None:
         self.__instance["status"] = status
         self.__instance["overriddenstatus"] = overriddenstatus
@@ -798,7 +778,7 @@ class EurekaClient:
         except Exception as e:
             self.__alive = False
             _logger.warn("Register error! Will try in next heartbeat. ", exc_info=True)
-            await self._on_error(ERROR_REGISTER, e)
+            await self._on_error(py_eureka_client.ERROR_REGISTER, e)
         else:
             _logger.debug("register successfully!")
             self.__alive = True
@@ -812,7 +792,7 @@ class EurekaClient:
             await self.__connect_to_eureka_server(do_cancel)
         except Exception as e:
             _logger.warn("Cancel error!", exc_info=True)
-            await self._on_error(ERROR_STATUS_UPDATE, e)
+            await self._on_error(py_eureka_client.ERROR_STATUS_UPDATE, e)
         else:
             self.__alive = False
 
@@ -838,7 +818,7 @@ class EurekaClient:
             _logger.warn(
                 "Cannot send heartbeat to server, try to register. ", exc_info=True
             )
-            await self._on_error(ERROR_STATUS_UPDATE, e)
+            await self._on_error(py_eureka_client.ERROR_STATUS_UPDATE, e)
             await self.register()
 
     async def status_update(self, new_status: str) -> None:
@@ -857,7 +837,7 @@ class EurekaClient:
             await self.__connect_to_eureka_server(do_status_update)
         except Exception as e:
             _logger.warn("update status error!", exc_info=True)
-            await self._on_error(ERROR_STATUS_UPDATE, e)
+            await self._on_error(py_eureka_client.ERROR_STATUS_UPDATE, e)
 
     async def delete_status_override(self) -> None:
         try:
@@ -873,7 +853,7 @@ class EurekaClient:
             await self.__connect_to_eureka_server(do_delete_status_override)
         except Exception as e:
             _logger.warn("delete status overrid error!", exc_info=True)
-            await self._on_error(ERROR_STATUS_UPDATE, e)
+            await self._on_error(py_eureka_client.ERROR_STATUS_UPDATE, e)
 
     async def __start_register(self):
         _logger.debug("start to registry client...")
@@ -881,7 +861,7 @@ class EurekaClient:
 
     async def __stop_registery(self):
         if self.__alive:
-            await self.register(status=INSTANCE_STATUS_DOWN)
+            await self.register(status=py_eureka_client.INSTANCE_STATUS_DOWN)
             await self.cancel()
 
     def __heartbeat_thread(self):
@@ -908,7 +888,7 @@ class EurekaClient:
             await self.__connect_to_eureka_server(do_pull)
         except Exception as e:
             _logger.warn("pull full registry from eureka server error!", exc_info=True)
-            await self._on_error(ERROR_DISCOVER, e)
+            await self._on_error(py_eureka_client.ERROR_DISCOVER, e)
 
     async def __fetch_delta(self):
         async def do_fetch(url):
@@ -935,7 +915,7 @@ class EurekaClient:
             await self.__connect_to_eureka_server(do_fetch)
         except Exception as e:
             _logger.warn("fetch delta from eureka server error!", exc_info=True)
-            await self._on_error(ERROR_DISCOVER, e)
+            await self._on_error(py_eureka_client.ERROR_DISCOVER, e)
 
     def __is_hash_match(self):
         app_hash = self.__get_applications_hash()
@@ -953,13 +933,16 @@ class EurekaClient:
                 _logger.debug(
                     f"instance [{instance.instanceId}] has {instance.actionType}"
                 )
-                if instance.actionType in (ACTION_TYPE_ADDED, ACTION_TYPE_MODIFIED):
+                if instance.actionType in (
+                    py_eureka_client.ACTION_TYPE_ADDED,
+                    py_eureka_client.ACTION_TYPE_MODIFIED,
+                ):
                     existingApp = self.applications.get_application(application.name)
                     if existingApp is None:
                         self.applications.add_application(application)
                     else:
                         existingApp.update_instance(instance)
-                elif instance.actionType == ACTION_TYPE_DELETED:
+                elif instance.actionType == py_eureka_client.ACTION_TYPE_DELETED:
                     existingApp = self.applications.get_application(application.name)
                     if existingApp is None:
                         self.applications.add_application(application)
@@ -1040,7 +1023,7 @@ class EurekaClient:
         method: str = "GET",
         headers: Dict[str, str] = None,
         data: Union[bytes, str, Dict] = None,
-        timeout: float = _DEFAULT_TIME_OUT,
+        timeout: float = py_eureka_client.DEFAULT_TIME_OUT,
     ) -> Union[str, Dict, http_client.HttpResponse]:
         if data and isinstance(data, dict):
             _data = json.dumps(data).encode()
@@ -1116,22 +1099,22 @@ class EurekaClient:
             self.__ha_cache[application_name] = selected_instance.instanceId
             return selected_instance
 
-        if self.__ha_strategy == HA_STRATEGY_RANDOM:
+        if self.__ha_strategy == py_eureka_client.HA_STRATEGY_RANDOM:
             return random_one(up_instances)
-        elif self.__ha_strategy == HA_STRATEGY_STICK:
+        elif self.__ha_strategy == py_eureka_client.HA_STRATEGY_STICK:
             if application_name in self.__ha_cache:
                 cache_id = self.__ha_cache[application_name]
                 cache_instance = app.get_instance(cache_id)
                 if (
                     cache_instance is not None
-                    and cache_instance.status == INSTANCE_STATUS_UP
+                    and cache_instance.status == py_eureka_client.INSTANCE_STATUS_UP
                 ):
                     return cache_instance
                 else:
                     return random_one(up_instances)
             else:
                 return random_one(up_instances)
-        elif self.__ha_strategy == HA_STRATEGY_OTHER:
+        elif self.__ha_strategy == py_eureka_client.HA_STRATEGY_OTHER:
             if application_name in self.__ha_cache:
                 cache_id = self.__ha_cache[application_name]
                 other_instances = []
@@ -1196,7 +1179,7 @@ __cache_clients_lock = RLock()
 
 
 async def init_async(
-    eureka_server: str = DEFAULT_EUREKA_SERVER_URL,
+    eureka_server: str = py_eureka_client.DEFAULT_EUREKA_SERVER_URL,
     eureka_domain: str = "",
     region: str = "",
     zone: str = "",
@@ -1214,13 +1197,13 @@ async def init_async(
     instance_host: str = "",
     instance_ip: str = "",
     instance_ip_network: str = "",
-    instance_port: int = DEFAULT_INSTANCE_PORT,
+    instance_port: int = py_eureka_client.DEFAULT_INSTANCE_PORT,
     instance_unsecure_port_enabled: bool = True,
-    instance_secure_port: int = DEFAULT_INSTANCE_SECURE_PORT,
+    instance_secure_port: int = py_eureka_client.DEFAULT_INSTANCE_SECURE_PORT,
     instance_secure_port_enabled: bool = False,
-    data_center_name: str = DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
-    renewal_interval_in_secs: int = RENEWAL_INTERVAL_IN_SECS,
-    duration_in_secs: int = DURATION_IN_SECS,
+    data_center_name: str = py_eureka_client.DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
+    renewal_interval_in_secs: int = py_eureka_client.RENEWAL_INTERVAL_IN_SECS,
+    duration_in_secs: int = py_eureka_client.DURATION_IN_SECS,
     home_page_url: str = "",
     status_page_url: str = "",
     health_check_url: str = "",
@@ -1230,7 +1213,7 @@ async def init_async(
     is_coordinating_discovery_server: bool = False,
     metadata: Dict = {},
     remote_regions: List[str] = [],
-    ha_strategy: int = HA_STRATEGY_RANDOM,
+    ha_strategy: int = py_eureka_client.HA_STRATEGY_RANDOM,
     strict_service_error_policy: bool = True,
 ) -> EurekaClient:
     """
@@ -1328,7 +1311,7 @@ async def do_service_async(
     method: str = "GET",
     headers: Dict[str, str] = None,
     data: Union[bytes, str, Dict] = None,
-    timeout: float = _DEFAULT_TIME_OUT,
+    timeout: float = py_eureka_client.DEFAULT_TIME_OUT,
 ) -> Union[str, Dict, http_client.HttpResponse]:
     cli = get_client()
     if cli is None:
@@ -1373,7 +1356,7 @@ def get_event_loop() -> asyncio.AbstractEventLoop:
 
 
 def init(
-    eureka_server: str = DEFAULT_EUREKA_SERVER_URL,
+    eureka_server: str = py_eureka_client.DEFAULT_EUREKA_SERVER_URL,
     eureka_domain: str = "",
     region: str = "",
     zone: str = "",
@@ -1391,13 +1374,13 @@ def init(
     instance_host: str = "",
     instance_ip: str = "",
     instance_ip_network: str = "",
-    instance_port: int = DEFAULT_INSTANCE_PORT,
+    instance_port: int = py_eureka_client.DEFAULT_INSTANCE_PORT,
     instance_unsecure_port_enabled: bool = True,
-    instance_secure_port: int = DEFAULT_INSTANCE_SECURE_PORT,
+    instance_secure_port: int = py_eureka_client.DEFAULT_INSTANCE_SECURE_PORT,
     instance_secure_port_enabled: bool = False,
-    data_center_name: str = DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
-    renewal_interval_in_secs: int = RENEWAL_INTERVAL_IN_SECS,
-    duration_in_secs: int = DURATION_IN_SECS,
+    data_center_name: str = py_eureka_client.DEFAULT_DATA_CENTER_INFO,  # Netflix, Amazon, MyOwn
+    renewal_interval_in_secs: int = py_eureka_client.RENEWAL_INTERVAL_IN_SECS,
+    duration_in_secs: int = py_eureka_client.DURATION_IN_SECS,
     home_page_url: str = "",
     status_page_url: str = "",
     health_check_url: str = "",
@@ -1407,7 +1390,7 @@ def init(
     is_coordinating_discovery_server: bool = False,
     metadata: Dict = {},
     remote_regions: List[str] = [],
-    ha_strategy: int = HA_STRATEGY_RANDOM,
+    ha_strategy: int = py_eureka_client.HA_STRATEGY_RANDOM,
     strict_service_error_policy: bool = True,
 ) -> EurekaClient:
     """
@@ -1487,7 +1470,7 @@ def do_service(
     method: str = "GET",
     headers: Dict[str, str] = None,
     data: Union[bytes, str, Dict] = None,
-    timeout: float = _DEFAULT_TIME_OUT,
+    timeout: float = py_eureka_client.DEFAULT_TIME_OUT,
 ) -> Union[str, Dict, http_client.HttpResponse]:
     return get_event_loop().run_until_complete(
         do_service_async(
