@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/py-eureka-client.png)](https://badge.fury.io/py/py-eureka-client)
 
-## Discription
+## Description
 
 This is an eureka client written in python, you can easily intergrate your python components with spring cloud.
 
@@ -10,19 +10,16 @@ This is an eureka client written in python, you can easily intergrate your pytho
 
 Python 3.7+
 
-*From `0.9.0`, python 2 is no longer supported, if you are using python 2, please use  version `0.8.12`.*
-
 ## Why choose
 
 * Register your python components to eureka server.
-* Support failover.
-* Support DNS discovery. 
+* Support fail over.
 * Send heartbeat to eureka server.
 * Pull registry from eureka server.
 * Easy to use interface to use other REST service.
 * HA when calling other REST service.
-* Both trandictional and async def interfaces are provided.
-* The http client lib is replacable.
+* Both traditional and async def interfaces are provided.
+* The http client lib is replaceable.
 
 ## How to use
 
@@ -34,16 +31,17 @@ pip install py_eureka_client
 
 ### Getting Start
 
-This is the easiest way to use this component.
+This is the easiest way to use this component. The flowing code will register your server to eureka server and also 
+start to send heartbeat every 30 seconds
 
 ```python
 import py_eureka_client.eureka_client as eureka_client
 
-your_rest_server_port = 9090
-# The flowing code will register your server to eureka server and also start to send heartbeat every 30 seconds
-eureka_client.init(eureka_server="http://your-eureka-server-peer1,http://your-eureka-server-peer2",
-                   app_name="your_app_name",
-                   instance_port=your_rest_server_port)
+eureka_client.init(
+    eureka_server="http://127.0.0.1:8761/",
+    app_name="gateway",
+    instance_port=8761,
+)
 ```
 
 Then, in your business code, use
